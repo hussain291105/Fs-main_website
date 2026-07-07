@@ -1,0 +1,24 @@
+{
+  "name": "Fresh Soft Tissue",
+  "short_name": "Fresh Tissue",
+  "description": "Premium Tissue Products Manufacturer",
+  "theme_color": "#0B3D75",
+  "background_color": "#0B3D75",
+  "display": "standalone",
+  "orientation": "portrait",
+  "start_url": "/",
+  "scope": "/",
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+@import "leaflet/dist/leaflet.css";
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1D5C43;
+  --color-secondary: #48A174;
+  --color-background: #F8FAF9;
+  --color-dark: #0F1A15;
+  --color-muted: #4A5550;
+  --color-border: #D1DED8;
+  
+  --shadow-glow: 0 10px 40px rgba(29, 92, 67, 0.08);
+  
+  --radius-xl2: 1.5rem;
+  --radius-4xl: 2rem;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--color-background);
+  color: var(--color-dark);
+  overflow-x: hidden;
+}
+
+:root {
+  --font-heading: var(--font-heading);
+  --font-body: var(--font-body);
+  --font-mono: var(--font-mono);
+}
+
+.gradient-bg {
+  background:
+    radial-gradient(circle at top left, rgba(93, 187, 138, 0.15), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(46, 125, 90, 0.15), transparent 30%),
+    var(--color-background);
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  overflow-x: hidden;
+}
+
+section {
+  scroll-margin-top: 0;
+}
