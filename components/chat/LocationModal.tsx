@@ -45,7 +45,22 @@ export default function LocationModal({
 
       <div
         ref={modalRef}
-        className="absolute inset-8 rounded-3xl bg-white shadow-2xl overflow-hidden"
+        className="
+          absolute
+          left-1/2
+          top-1/2
+          -translate-x-1/2
+          -translate-y-1/2
+          w-[95vw]
+          max-w-3xl
+          h-[90vh]
+          rounded-3xl
+          bg-white
+          shadow-2xl
+          overflow-hidden
+          flex
+          flex-col
+        "
       >
 
         <div className="flex items-center justify-between border-b p-5">
@@ -56,14 +71,14 @@ export default function LocationModal({
 
           <button
             onClick={onClose}
-            className="rounded-lg bg-red-500 px-4 py-2 text-white"
+            className="rounded-lg bg-red-500 px-4 py-2 text-white cursor-pointer"
           >
             Close
           </button>
 
         </div>
 
-        <div className="h-[calc(100%-72px)]">
+        <div className="flex-1 min-h-0">
           <MapPicker
             onSelect={onSelect}
             onDone={onClose}

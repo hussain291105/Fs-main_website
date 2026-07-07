@@ -32,7 +32,7 @@
     const [showConfirmationButtons, setShowConfirmationButtons] = useState(false);
     const [quotationSubmitted, setQuotationSubmitted] = useState(false);
     const [showProductsMenu, setShowProductsMenu] = useState(false);
-    const [waitingForQuantity, setWaitingForQuantity] = useState(false);
+    const [showOrderForm, setShowOrderForm] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
     const [showLocationButtons, setShowLocationButtons] = useState(false);
     const [deliveryLocation, setDeliveryLocation] = useState<{
@@ -46,7 +46,15 @@
     } | null>(null);
     const [showLocationConfirm, setShowLocationConfirm] = useState(false);
     const [showMap, setShowMap] = useState(false);
-    const [orderDetails, setOrderDetails] = useState({
+    const [orderItems, setOrderItems] = useState<
+      {
+        product: string;
+        quantity: string;
+        unit: string;
+      }[]
+    >([]);
+
+    const [currentItem, setCurrentItem] = useState({
       product: "",
       quantity: "",
       unit: "",
@@ -87,6 +95,23 @@
       city: "",
     });
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+    // Auto-save orderItems to localStorage
+    useEffect(() => {
+      localStorage.setItem(
+        "fsOrderItems",
+        JSON.stringify(orderItems)
+      );
+    }, [orderItems]);
+
+    // Restore orderItems from localStorage on load
+    useEffect(() => {
+      const savedOrder = localStorage.getItem("fsOrderItems");
+
+      if (savedOrder) {
+        setOrderItems(JSON.parse(savedOrder));
+      }
+    }, []);
 
     const botError = (text: string) => {
       setTimeout(() => {
@@ -204,42 +229,6 @@
     ]);
 
       setMessage("");
-
-      // Capture quantity + unit entered by the user
-      if (waitingForQuantity) {
-        const quantityInput = userMessage.trim();
-        const match = quantityInput.match(/^(\d+)\s*(packs?|cartons?|boxes?|rolls?|pieces?)$/i); 
-
-        if (!match) {
-          botError("Please enter quantity like:\n\n100 Packs\n250 Cartons\n500 Rolls");
-          return;
-        }
-          setOrderDetails({
-            ...orderDetails,
-            quantity: match[1],
-            unit: match[2],
-          });
-
-          setWaitingForQuantity(false);
-
-          setTimeout(() => {
-            setMessages((prev) => [
-              ...prev,
-              {
-                sender: "ai",
-                text: `✅ Quantity recorded successfully.
-                Please proceed with the quotation by clicking the button below.`,
-                timestamp: new Date(),
-              },
-            ]);
-
-            setQuotationMode(true);
-            setQuotationCompleted(false);
-            setQuotationStep("company");
-          }, 600);
-
-          return;
-      }
 
       if (editField) {
         let updatedData = { ...quotationData };
@@ -378,7 +367,7 @@
               {
               sender: "ai",
               text: `✅ Thank you for your quotation request.
-        
+
               Your requested items have been recorded successfully.
               Our Representative Agent will connect with you shortly to discuss pricing, availability, and delivery details.
               If you have any additional requirements, please let us know.`,
@@ -390,6 +379,18 @@
               timestamp: new Date(),
             },
             ]);
+
+            // Clear localStorage after successful submission
+            localStorage.removeItem("fsOrderItems");
+            localStorage.removeItem("fsCurrentItem");
+
+            // Reset order state
+            setOrderItems([]);
+            setCurrentItem({
+              product: "",
+              quantity: "",
+              unit: "",
+            });
           }, 600);
 
           return;
@@ -1157,7 +1158,7 @@
                             onChange={(e) => {
                               setSelectedProduct(e.target.value);
 
-                              setOrderDetails(prev => ({
+                              setCurrentItem(prev => ({
                                 ...prev,
                                 product: e.target.value
                               }));
@@ -1469,21 +1470,12 @@
                                 },
                                 {
                                   sender: "ai",
-                                  text: `
-                                  📦 Please enter the quantity required for your selected product.
-
-                                  Examples:
-                                  • 100 Packs
-                                  • 250 Cartons
-                                  • 500 Rolls
-                                  • 1000 Boxes
-
-                                  Please mention both the quantity and unit.`,
+                                  text: "📦 Please provide your order details.",
                                   timestamp: new Date(),
                                 },
                               ]);
 
-                              setWaitingForQuantity(true);
+                              setShowOrderForm(true);
                             }}
                             className="rounded-full border border-red-300 bg-white px-5 py-2 text-red-600 transition hover:bg-red-50"
                           >
@@ -1517,6 +1509,169 @@
                         </div>
                       )
                     }
+
+                    {msg.sender === "ai" &&
+                      showOrderForm &&
+                      msg.text.includes("Please provide your order details.") && (
+
+                      <div className="mt-4 rounded-xl border p-4 bg-gray-50 space-y-4">
+
+                        <select
+                          value={currentItem.product}
+                          onChange={(e) =>
+                            setCurrentItem(prev => ({
+                              ...prev,
+                              product: e.target.value,
+                            }))
+                          }
+                          className="w-full rounded-lg border p-3"
+                        >
+                          <option value="">Select Product</option>
+
+                          {products.map((item) => (
+                            <option key={item.title} value={item.title}>
+                              {item.title}
+                            </option>
+                          ))}
+                        </select>
+
+                        <input
+                          type="number"
+                          min={1}
+                          placeholder="Quantity"
+                          value={currentItem.quantity}
+                          onChange={(e) =>
+                            setCurrentItem(prev => ({
+                              ...prev,
+                              quantity: e.target.value,
+                            }))
+                          }
+                          className="w-full rounded-lg border p-3"
+                        />
+
+                        <select
+                          value={currentItem.unit}
+                          onChange={(e) =>
+                            setCurrentItem(prev => ({
+                              ...prev,
+                              unit: e.target.value,
+                            }))
+                          }
+                          className="w-full rounded-lg border p-3"
+                        >
+                          <option value="">Select Unit</option>
+                          <option value="Boxes">Boxes</option>
+                          <option value="Packs">Packs</option>
+                          <option value="Rolls">Rolls</option>
+                          <option value="Cartons">Cartons</option>
+                          <option value="Pieces">Pieces</option>
+                        </select>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+
+                            if (
+                              !currentItem.product ||
+                              !currentItem.quantity ||
+                              !currentItem.unit
+                            ) {
+                              botError("Please complete this product.");
+                              return;
+                            }
+
+                            setOrderItems(prev => [...prev, currentItem]);
+
+                            setCurrentItem({
+                              product: "",
+                              quantity: "",
+                              unit: "",
+                            });
+
+                          }}
+                          className="w-full rounded-lg border border-primary py-3 text-primary hover:bg-primary hover:text-white cursor-pointer"
+                        >
+                          ➕ Add Product
+                        </button>
+
+                        {orderItems.length > 0 && (
+                          <div className="rounded-lg border bg-white p-4">
+                            <h3 className="mb-3 font-semibold">
+                              Added Products
+                            </h3>
+                            <table className="w-full text-sm">
+                              <thead>
+                                <tr>
+                                  <th className="text-left">Product</th>
+                                  <th className="text-center">Qty</th>
+                                  <th className="text-center">Unit</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {orderItems.map((item, index) => (
+                                  <tr key={index}>
+                                    <td>{item.product}</td>
+                                    <td className="text-center">{item.quantity}</td>
+                                    <td className="text-center">{item.unit}</td>
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )}
+
+                        <button
+                          className="w-full rounded-lg bg-primary py-3 text-white cursor-pointer"
+                          onClick={() => {
+
+                            let items = [...orderItems];
+
+                            if (
+                              currentItem.product &&
+                              currentItem.quantity &&
+                              currentItem.unit
+                            ) {
+                              items.push(currentItem);
+                            }
+
+                            if (items.length === 0) {
+                              botError("Please add at least one product.");
+                              return;
+                            }
+
+                            setOrderItems(items);
+
+                            localStorage.setItem(
+                              "fsOrderItems",
+                              JSON.stringify(items)
+                            );
+
+                            setShowOrderForm(false);
+
+                            setQuotationMode(true);
+                            setQuotationStep("company");
+
+                            setMessages(prev => [
+                              ...prev,
+                              {
+                                sender: "ai",
+                                text: "✅ Order details recorded successfully.",
+                                timestamp: new Date(),
+                              },
+                              {
+                                sender: "ai",
+                                text: "Please proceed with the quotation by clicking the button below.",
+                                timestamp: new Date(),
+                              },
+                            ]);
+
+                          }}
+                        >
+                          Continue
+                        </button>
+
+                      </div>
+                    )}
 
                     {msg.sender==="ai" &&
                       showLocationConfirm &&
@@ -1567,13 +1722,63 @@
  
                                   ━━━━━━━━━━━━━━━━━━━━
                                   <strong>📦 Order Details</strong>
- 
-                                  <strong>Product:</strong>
-                                  ${orderDetails.product || "Not Selected"}
-                                  <strong>Quantity:</strong>
-                                  ${orderDetails.quantity || "Not Provided"}
-                                  <strong>Unit:</strong>
-                                  ${orderDetails.unit || "Not Provided"}
+
+                                  <table style="
+                                    width:100%;
+                                    border-collapse:collapse;
+                                    border-spacing:0;
+                                    margin-top:12px;
+                                  ">
+                                    <thead>
+                                      <tr>
+                                        <th style="width:60%; text-align:left; padding:8px 20px 8px 0;">
+                                          Product
+                                        </th>
+                                        <th style="width:20%; text-align:center; padding:8px 30px;">
+                                          Quantity
+                                        </th>
+                                        <th style="width:20%; text-align:center; padding:8px 0 8px 30px;">
+                                          Unit
+                                        </th>
+                                      </tr>
+                                    </thead>
+
+                                    <tbody>
+                                      ${orderItems
+                                        .map(
+                                          (item) => `
+                                          <tr>
+                                            <td style="
+                                              padding:4px 20px 4px 0;
+                                              line-height:1.3;
+                                              vertical-align:middle;
+                                            ">
+                                              ${item.product}
+                                            </td>
+
+                                            <td style="
+                                              text-align:center;
+                                              padding:4px 30px;
+                                              line-height:1.3;
+                                              vertical-align:middle;
+                                            ">
+                                              ${item.quantity}
+                                            </td>
+
+                                            <td style="
+                                              text-align:center;
+                                              padding:4px 0 4px 30px;
+                                              line-height:1.3;
+                                              vertical-align:middle;
+                                            ">
+                                              ${item.unit}
+                                            </td>
+                                          </tr>
+                                        `
+                                        )
+                                        .join("")}
+                                    </tbody>
+                                  </table>
  
                                   ━━━━━━━━━━━━━━━━━━━━
                                   <strong>Additional Notes:</strong>
@@ -2038,7 +2243,7 @@
             });
 
             setMessages((prev) => [
-              ...prev,
+              ...prev.filter(msg => !msg.text.includes("📍 Delivery Location Selected")),
               {
                 sender: "ai",
                 text: `📍 Delivery Location Selected
@@ -2047,10 +2252,17 @@
 <strong>City:</strong> ${city}
 <strong>State:</strong> ${state}
 <strong>Country:</strong> ${country}
-<strong>Pincode:</strong> ${pincode}`,
+<strong>Pincode:</strong> ${pincode}
+
+<strong>Latitude:</strong> ${lat}
+<strong>Longitude:</strong> ${lng}
+
+Is this correct?`,
                 timestamp: new Date(),
               },
             ]);
+
+            setShowLocationConfirm(true);
           }}
         />
 

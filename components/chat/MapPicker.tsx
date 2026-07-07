@@ -1,7 +1,7 @@
 "use client";
 
 import { MapContainer, Marker, TileLayer, useMapEvents, useMap } from "react-leaflet";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import L from "leaflet";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -15,12 +15,28 @@ L.Icon.Default.mergeOptions({
     "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
+function ResizeMap() {
+  const map = useMap();
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      map.invalidateSize();
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [map]);
+
+  return null;
+}
+
 function SearchBar({
   onSelect,
 }: {
   onSelect: (lat: number, lng: number) => void;
 }) {
   const [query, setQuery] = useState("");
+  const [latitude, setLatitude] = useState("");
+  const [longitude, setLongitude] = useState("");
   const map = useMap();
 
   async function searchLocation() {
@@ -50,43 +66,69 @@ function SearchBar({
     onSelect(lat, lng);
   }
 
+  async function searchCoordinates() {
+    const lat = Number(latitude);
+    const lng = Number(longitude);
+
+    if (
+      isNaN(lat) ||
+      isNaN(lng) ||
+      lat < -90 ||
+      lat > 90 ||
+      lng < -180 ||
+      lng > 180
+    ) {
+      alert("Please enter valid coordinates.");
+      return;
+    }
+
+    map.flyTo([lat, lng], 17, {
+      duration: 1.5,
+    });
+
+    onSelect(lat, lng);
+  }
+
   return (
     <div
-      className="absolute left-1/2 top-4 z-[1000] flex w-[420px] -translate-x-1/2 rounded-xl bg-white p-2 shadow-xl"
+      className="
+        absolute
+        top-4
+        left-1/2
+        z-[1000]
+        w-[calc(100%-24px)]
+        max-w-[540px]
+        -translate-x-1/2
+        rounded-xl
+        bg-white
+        p-3
+        shadow-xl
+        space-y-3
+      "
       onClick={(e) => e.stopPropagation()}
       onMouseDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
     >
+      {/* Address Search */}
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") searchLocation();
+          }}
+          placeholder="Search location..."
+          className="flex-1 rounded-lg border px-4 py-2"
+        />
 
-      <input
-        type="text"
-        value={query}
-        onClick={(e) => e.stopPropagation()}
-        onFocus={(e) => e.stopPropagation()}
-        onMouseDown={(e) => e.stopPropagation()}
-        onChange={(e) => setQuery(e.target.value)}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            searchLocation();
-          }
-        }}
-        placeholder="Search location as (Country, State, City, Area)..."
-        className="flex-1 rounded-lg border px-4 py-2 outline-none"
-      />
-
-      <button
-        type="button"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          searchLocation();
-        }}
-        className="ml-2 rounded-lg bg-primary px-5 text-white"
-      >
-        Search
-      </button>
-
+        <button
+          onClick={searchLocation}
+          className="shrink-0 rounded-lg bg-primary px-5 py-2 text-white"
+        >
+          Search
+        </button>
+      </div>
     </div>
   );
 }
@@ -131,8 +173,10 @@ export default function MapPicker({
     <MapContainer
       center={[18.5204, 73.8567]}
       zoom={13}
-      className="h-full w-full rounded-2xl"
+      className="w-full h-full rounded-2xl"
     >
+      <ResizeMap />
+
       <TileLayer
         attribution="© OpenStreetMap"
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -155,28 +199,32 @@ export default function MapPicker({
         <div
           className="
             absolute
-            bottom-5
+            bottom-4
             left-1/2
             z-[1000]
             flex
+            w-[calc(100%-20px)]
+            max-w-md
             -translate-x-1/2
-            gap-4
+            flex-col
+            gap-2
             rounded-2xl
             bg-white
             p-3
             shadow-2xl
+            sm:flex-row
           "
         >
           <button
             onClick={() => setPosition(null)}
-            className="rounded-lg border px-5 py-2 hover:bg-gray-100"
+            className="flex-1 rounded-lg border py-2 hover:bg-gray-100 cursor-pointer"
           >
             Change
           </button>
 
           <button
             onClick={onDone}
-            className="rounded-lg bg-primary px-6 py-2 text-white hover:opacity-90"
+            className="flex-1 rounded-lg bg-primary py-2 text-white hover:opacity-90 cursor-pointer"
           >
             ✓ Confirm Location
           </button>
