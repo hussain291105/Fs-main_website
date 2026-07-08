@@ -34,6 +34,8 @@
     const [showProductsMenu, setShowProductsMenu] = useState(false);
     const [showOrderForm, setShowOrderForm] = useState(false);
     const [selectedProduct, setSelectedProduct] = useState<string | null>(null);
+    const [quotationEnabled, setQuotationEnabled] = useState(false);
+    const [deliveryEnabled, setDeliveryEnabled] = useState(false);
     const [showLocationButtons, setShowLocationButtons] = useState(false);
     const [deliveryLocation, setDeliveryLocation] = useState<{
       address: string;
@@ -343,6 +345,8 @@
           setQuotationMode(false);
 
           setQuotationSubmitted(true);
+
+          setDeliveryEnabled(true);
 
           setTimeout(() => {
             setMessages((prev) => [
@@ -1006,10 +1010,17 @@
 
                 <button
                   key={title}
-                  disabled={quotationMode}
+                  disabled={
+                    quotationMode ||
+                    (title === "Quotation" && !quotationEnabled) ||
+                    (title === "Delivery" && !deliveryEnabled)
+                  }
                   onClick={() => sendMessage(prompt)}
                   className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm shadow transition sm:gap-3 sm:px-5 sm:py-3 ${
-                    quotationMode
+                    (title === "Quotation" && !quotationEnabled) ||
+                    (title === "Delivery" && !deliveryEnabled)
+                      ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400 opacity-60"
+                      : quotationMode
                       ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
                       : "cursor-pointer border-primary/20 bg-white hover:bg-primary hover:text-white shadow-glow hover:shadow-[0_0_25px_rgba(31,107,79,0.5)]"
                   }`}
@@ -1133,6 +1144,8 @@
                                 ...prev,
                                 product: e.target.value
                               }));
+
+                              setQuotationEnabled(true);
 
                               sendMessage(e.target.value);
                               setShowProductsMenu(false);
@@ -1968,65 +1981,51 @@
                           ].map(({ icon: Icon, title, prompt }) => (
                             <button
                               key={title}
+                              disabled={title !== "Quotation"}
                               onClick={() => {
-                                if (title === "Quotation") {
-                                  setQuotationMode(true);
-                                  setQuotationCompleted(false);
-                                  setQuotationSubmitted(false);
-                                  setQuotationConfirmation(false);
-                                  setShowConfirmationButtons(false);
-                                  setShowEditButtons(false);
+                                if (title !== "Quotation") return;
 
-                                  setQuotationStep("company");
+                                setQuotationMode(true);
+                                setQuotationCompleted(false);
+                                setQuotationSubmitted(false);
+                                setQuotationConfirmation(false);
+                                setShowConfirmationButtons(false);
+                                setShowEditButtons(false);
 
-                                  setQuotationData({
-                                    company: "",
-                                    contact: "",
-                                    email: "",
-                                    phone: "",
-                                    country: "",
-                                    city: "",
-                                  });
+                                setQuotationStep("company");
 
-                                  setMessages((prev) => [
-                                    ...prev,
-                                    {
-                                      sender: "user",
-                                      text: "I would like to request a quotation.",
-                                      timestamp: new Date(),
-                                    },
-                                    {
-                                      sender: "ai",
-                                      text: `Certainly! I'd be happy to prepare a quotation.
+                                setQuotationData({
+                                  company: "",
+                                  contact: "",
+                                  email: "",
+                                  phone: "",
+                                  country: "",
+                                  city: "",
+                                });
 
-                              Before we begin, could you please provide the following details:
+                                setMessages((prev) => [
+                                  ...prev,
+                                  {
+                                    sender: "user",
+                                    text: "I would like to request a quotation.",
+                                    timestamp: new Date(),
+                                  },
+                                  {
+                                    sender: "ai",
+                                    text: `Certainly! I'd be happy to prepare a quotation.
 
-                              <strong>🏢 Please enter your Company Name.</strong>`,
-                                      timestamp: new Date(),
-                                    },
-                                  ]);
+Before we begin, could you please provide the following details:
 
-                                  return;
-                                }
-
-                                sendMessage(prompt);
+<strong>🏢 Please enter your Company Name.</strong>`,
+                                    timestamp: new Date(),
+                                  },
+                                ]);
                               }}
-                              className="
-                                flex items-center gap-2
-                                rounded-full
-                                border border-primary/20
-                                bg-white
-                                px-4 py-2
-                                text-sm
-                                shadow
-                                transition-all duration-300
-                                hover:bg-primary
-                                hover:text-white
-                                hover:shadow-[0_0_25px_rgba(31,107,79,0.5)]
-                                sm:gap-3
-                                sm:px-5
-                                sm:py-3
-                              "
+                              className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm shadow transition sm:gap-3 sm:px-5 sm:py-3 ${
+                                title !== "Quotation"
+                                  ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400 opacity-60"
+                                  : "cursor-pointer border-primary/20 bg-white hover:bg-primary hover:text-white shadow-glow hover:shadow-[0_0_25px_rgba(31,107,79,0.5)]"
+                              }`}
                             >
                               <Icon className="h-4 w-4 sm:h-5 sm:w-5" />
                               {title}
@@ -2061,11 +2060,15 @@
 
                             <button
                               key={title}
-                              disabled={quotationMode}
-                              onClick={() => sendMessage(prompt)}
+                              disabled={title !== "Delivery"}
+                              onClick={() => {
+                                if (title !== "Delivery") return;
+
+                                sendMessage("What are your delivery and export options?");
+                              }}
                               className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm shadow transition sm:gap-3 sm:px-5 sm:py-3 ${
-                                quotationMode
-                                  ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400"
+                                title !== "Delivery"
+                                  ? "cursor-not-allowed border-gray-200 bg-gray-100 text-gray-400 opacity-60"
                                   : "cursor-pointer border-primary/20 bg-white hover:bg-primary hover:text-white shadow-glow hover:shadow-[0_0_25px_rgba(31,107,79,0.5)]"
                               }`}
                             >
