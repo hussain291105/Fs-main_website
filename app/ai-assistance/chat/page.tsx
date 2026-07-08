@@ -96,23 +96,6 @@
     });
     const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
-    // Auto-save orderItems to localStorage
-    useEffect(() => {
-      localStorage.setItem(
-        "fsOrderItems",
-        JSON.stringify(orderItems)
-      );
-    }, [orderItems]);
-
-    // Restore orderItems from localStorage on load
-    useEffect(() => {
-      const savedOrder = localStorage.getItem("fsOrderItems");
-
-      if (savedOrder) {
-        setOrderItems(JSON.parse(savedOrder));
-      }
-    }, []);
-
     const botError = (text: string) => {
       setTimeout(() => {
         setMessages((prev) => [
@@ -379,18 +362,6 @@
               timestamp: new Date(),
             },
             ]);
-
-            // Clear localStorage after successful submission
-            localStorage.removeItem("fsOrderItems");
-            localStorage.removeItem("fsCurrentItem");
-
-            // Reset order state
-            setOrderItems([]);
-            setCurrentItem({
-              product: "",
-              quantity: "",
-              unit: "",
-            });
           }, 600);
 
           return;
@@ -1640,11 +1611,6 @@
                             }
 
                             setOrderItems(items);
-
-                            localStorage.setItem(
-                              "fsOrderItems",
-                              JSON.stringify(items)
-                            );
 
                             setShowOrderForm(false);
 
