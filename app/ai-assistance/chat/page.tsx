@@ -1689,62 +1689,26 @@
                                   ━━━━━━━━━━━━━━━━━━━━
                                   <strong>📦 Order Details</strong>
 
-                                  <table style="
-                                    width:100%;
-                                    border-collapse:collapse;
-                                    border-spacing:0;
-                                    margin-top:12px;
-                                  ">
-                                    <thead>
-                                      <tr>
-                                        <th style="width:60%; text-align:left; padding:8px 20px 8px 0;">
-                                          Product
-                                        </th>
-                                        <th style="width:20%; text-align:center; padding:8px 30px;">
-                                          Quantity
-                                        </th>
-                                        <th style="width:20%; text-align:center; padding:8px 0 8px 30px;">
-                                          Unit
-                                        </th>
-                                      </tr>
-                                    </thead>
-
-                                    <tbody>
-                                      ${orderItems
-                                        .map(
-                                          (item) => `
-                                          <tr>
-                                            <td style="
-                                              padding:4px 20px 4px 0;
-                                              line-height:1.3;
-                                              vertical-align:middle;
-                                            ">
-                                              ${item.product}
-                                            </td>
-
-                                            <td style="
-                                              text-align:center;
-                                              padding:4px 30px;
-                                              line-height:1.3;
-                                              vertical-align:middle;
-                                            ">
-                                              ${item.quantity}
-                                            </td>
-
-                                            <td style="
-                                              text-align:center;
-                                              padding:4px 0 4px 30px;
-                                              line-height:1.3;
-                                              vertical-align:middle;
-                                            ">
-                                              ${item.unit}
-                                            </td>
-                                          </tr>
-                                        `
-                                        )
-                                        .join("")}
-                                    </tbody>
-                                  </table>
+                                  <div style="margin-top:12px;">
+                                    ${orderItems
+                                      .map(
+                                        (item) => `
+                                        <div
+                                          style="
+                                            border:1px solid #e5e7eb;
+                                            border-radius:10px;
+                                            padding:10px;
+                                            margin-bottom:10px;
+                                          "
+                                        >
+                                          <strong>Product:</strong> ${item.product}<br>
+                                          <strong>Quantity:</strong> ${item.quantity}<br>
+                                          <strong>Unit:</strong> ${item.unit}
+                                        </div>
+                                      `
+                                      )
+                                      .join("")}
+                                  </div>
  
                                   ━━━━━━━━━━━━━━━━━━━━
                                   <strong>Additional Notes:</strong>
